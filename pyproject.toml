@@ -6,7 +6,19 @@ authors = ["Mkoek213 <mikolaj.kolek2@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.10.12"
+ipykernel = "^6.29.5"
+torch = "^2.4.0"
+numpy = "1.26.4"
+opencv-python = "^4.10.0.84"
+pandas = "^2.2.2"
+requests = "^2.32.3"
+pillow = "^10.4.0"
+ultralytics = "8.0.10"
+cvzone = "^1.6.1"
+supervision = "^0.22.0"
+loguru = "^0.7.2"
+yolo = "^0.3.2"
 
 
 [build-system]
