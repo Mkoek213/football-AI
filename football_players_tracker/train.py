@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 import torch
-def train_model(model_path, data_path, save_path, freeze_layers, epochs=100, imgsz=640, batch_size=12, run_dir='runs'):
+def train_model(model_path, data_path, save_path, time, freeze_layers, epochs=100, imgsz=1280, batch_size=1, run_dir='runs'):
 
     """
     Train or fine-tune a YOLO model.
@@ -17,18 +17,6 @@ def train_model(model_path, data_path, save_path, freeze_layers, epochs=100, img
     # Load the YOLO model
     model = YOLO(model_path)
 
-
-    freeze = [f"model.{x}." for x in range(freeze_layers+1)]
-
-    for k, v in model.named_parameters():
-        v.requires_grad = True  # train all layers
-        if any(x in k for x in freeze):
-            print(f"freezing {k}")
-            v.requires_grad = False
-
-    for k, v in model.named_parameters():
-        print(k, v.requires_grad)
-
     # Define training parameters
     train_params = {
         'data': data_path,
@@ -37,7 +25,10 @@ def train_model(model_path, data_path, save_path, freeze_layers, epochs=100, img
         'batch': batch_size,
         'device': 'cuda' if torch.cuda.is_available() else 'cpu',  # Use GPU if available
         'plots': True,
-        'patience': 100,
+        'time': time,
+        'freeze': freeze_layers,
+        'patience': 5,
+        'cache': True,
         'project': run_dir  # Specify the directory for storing runs
     }
 
@@ -52,10 +43,11 @@ def train_model(model_path, data_path, save_path, freeze_layers, epochs=100, img
 
 if __name__ == "__main__":
     train_model(
-        model_path='models/yolov5s.pt',  # Path to the pre-trained model
+        model_path='../models/yolov8x.pt',  # Path to the pre-trained model
         data_path='datasets/data.yaml',  # Path to the data configuration file for training
-        save_path='models/yolov5s_transfer_based_model.pt',  # Path to save the trained model
+        save_path='models/yolov8x_transfer_based_model.pt',  # Path to save the trained model
         freeze_layers = 10,
-        epochs=1,  # Number of training epochs for training
-        run_dir='runs/fine_tuning_yolov5s_freezed_based_model'  # Specify the directory for this training run
+        time = 2,
+        epochs=50,  # Number of training epochs for training
+        run_dir='runs/fine_tuning_yolov8x_freezed_based_model'  # Specify the directory for this training run
     )
