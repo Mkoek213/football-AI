@@ -27,13 +27,19 @@ def track_players_distance_to_ball(model_path: str, source_video_path: str, targ
             thickness=2
         )
         trace_annotator = sv.TraceAnnotator(
-            color=sv.ColorPalette.from_hex(['#FF8C00', '#00BFFF', '#FF1493', '#FFD700']),
+            color=sv.ColorPalette.from_hex(['#FF1493']),
             thickness=2
         )
         triangle_annotator = sv.TriangleAnnotator(
             color=sv.Color.from_hex('#FFD700'),
             base=20, height=17
         )
+        label_annotator = sv.LabelAnnotator(
+            color=sv.ColorPalette.from_hex(['#00BFFF', '#FF1493', '#FFD700']),
+            text_color=sv.Color.from_hex("#000000"),
+            text_position=sv.Position.BOTTOM_CENTER
+        )
+
 
         # Retrieve video information and initialize frame generator
         video_info = sv.VideoInfo.from_video_path(video_path=source_video_path)
@@ -41,7 +47,7 @@ def track_players_distance_to_ball(model_path: str, source_video_path: str, targ
 
         # Initialize a ByteTrack tracker for player tracking
         tracker = sv.ByteTrack()
-
+        tracker.reset()
         # Open the video sink for writing annotated frames
         with sv.VideoSink(target_path=target_video_path, video_info=video_info) as sink:
             for frame in frames_generator:
@@ -59,6 +65,12 @@ def track_players_distance_to_ball(model_path: str, source_video_path: str, targ
                 player_detections = detections[detections.class_id == 2]
                 player_detections = player_detections.with_nms(threshold=0.5, class_agnostic=True)
 
+                labels = [
+                    f"{tracker_id}"
+                    for tracker_id
+                    in player_detections.tracker_id
+                ]
+
                 # Annotate the frame with traces, bounding boxes, and labels
                 annotated_frame = trace_annotator.annotate(
                     scene=frame.copy(),
@@ -66,7 +78,7 @@ def track_players_distance_to_ball(model_path: str, source_video_path: str, targ
                 )
                 annotated_frame = ellipse_annotator.annotate(annotated_frame, player_detections)
                 annotated_frame = triangle_annotator.annotate(annotated_frame, ball_detections)
-
+                annotated_frame = label_annotator.annotate(annotated_frame, player_detections, labels=labels)
                 # If ball detections are present
                 if len(ball_detections) > 0:
                     # Select the first detected ball (assuming there's only one ball)
