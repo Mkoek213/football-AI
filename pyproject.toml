@@ -14,10 +14,14 @@ opencv-python = "4.9.0.80"
 pandas = "^2.2.2"
 requests = "2.31.0"
 pillow = "^10.4.0"
-ultralytics = "^8.0.10"
+ultralytics = "8.2.83"
 cvzone = "^1.6.1"
 supervision = "^0.22.0"
 loguru = "^0.7.2"
+transformers = "^4.44.2"
+sentencepiece = "^0.2.0"
+scikit-learn = "^1.5.1"
+umap-learn = "^0.5.6"
 
 [build-system]
 requires = ["poetry-core"]
