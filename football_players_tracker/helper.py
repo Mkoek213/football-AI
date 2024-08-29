@@ -6,9 +6,73 @@ from transformers import AutoProcessor, SiglipVisionModel
 import umap.umap_ as umap
 from sklearn.cluster import KMeans
 from typing import Generator, Iterable, List, TypeVar
+from ultralytics import YOLO
 
 V = TypeVar("V")
+def extract_crops(model, source_video_path: str, stride: int = 30) -> List[np.ndarray]:
+    """
+    Extracts image crops of players from video frames using a YOLO model.
 
+    Parameters:
+    model (str or YOLO): The YOLO model or its path to detect objects in the video.
+    source_video_path (str): Path to the source video file.
+    stride (int): The number of frames to skip between detections. Default is 30.
+
+    Returns:
+    List[np.ndarray]: A list of image crops (NumPy arrays) containing detected players.
+    """
+    # Initialize the YOLO model
+    model = YOLO(model)
+
+    # Generate video frames from the source video with the specified stride
+    frame_generator = sv.get_video_frames_generator(source_video_path, stride=stride)
+
+    crops = []
+    # Iterate over each frame in the video
+    for frame in tqdm(frame_generator):
+        # Detect objects in the frame using the YOLO model
+        result = model(frame, conf=0.3)[0]
+        # Convert YOLO detections to a format usable by the supervision library
+        detections = sv.Detections.from_ultralytics(result)
+        # Apply non-maximum suppression (NMS) to filter overlapping detections
+        detections = detections.with_nms(threshold=0.5, class_agnostic=True)
+        # Select only the detections corresponding to players (class_id = 2)
+        detections = detections[detections.class_id == 2]
+
+        # Extract and store crops of detected players from the frame
+        crops += [
+            sv.crop_image(frame, xyxy)
+            for xyxy in detections.xyxy
+        ]
+    return crops
+
+def resolve_goalkeppers_team_id(player_detections: sv.Detections, goalkepper_detections: sv.Detections) -> np.ndarray:
+    """
+    Assigns team IDs to goalkeepers based on their proximity to the team's centroid.
+
+    Parameters:
+    player_detections (sv.Detections): Detections of all players in the scene.
+    goalkepper_detections (sv.Detections): Detections of goalkeepers in the scene.
+
+    Returns:
+    np.ndarray: An array of team IDs assigned to each goalkeeper.
+    """
+    # Get the bottom-center coordinates of the goalkeepers and players
+    goalkeppers_xy = goalkepper_detections.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+    players_xy = player_detections.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+
+    # Calculate the centroid of each team's players
+    team_0_centroid = players_xy[player_detections.class_id == 0].mean(axis=0)
+    team_1_centroid = players_xy[player_detections.class_id == 1].mean(axis=0)
+
+    goalkeppers_team_ids = []
+    # Assign team IDs to each goalkeeper based on which team centroid is closer
+    for goalkepper_xy in goalkeppers_xy:
+        dist_0 = np.linalg.norm(goalkepper_xy - team_0_centroid)
+        dist_1 = np.linalg.norm(goalkepper_xy - team_1_centroid)
+        goalkeppers_team_ids.append(0 if dist_0 < dist_1 else 1)
+
+    return np.array(goalkeppers_team_ids)
 
 def create_batches(sequence: Iterable[V], batch_size: int) -> Generator[List[V], None, None]:
     """
@@ -50,7 +114,7 @@ class TeamClassifier:
         batch_size (int): The number of images to process in a batch. Default is 32.
         """
         # Select device based on availability of GPU
-        self.device = 'gpu' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.batch_size = batch_size
 
         # Load the pre-trained vision model and processor
