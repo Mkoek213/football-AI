@@ -57,7 +57,7 @@ def radar_view(model_path_pitch_detection: str, model_path_player_detection: str
 
         # Frame counter for limiting the number of processed frames (for testing purposes)
         frame_counter = 0
-        max_frames = 10  # Save only first 10 frames for testing
+        max_frames = 100  # Save only first 10 frames for testing
 
         # Open a video writer for the output video
         with sv.VideoSink(target_path=target_video_path, video_info=video_info) as sink:
