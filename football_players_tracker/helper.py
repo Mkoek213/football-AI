@@ -8,7 +8,7 @@ from tqdm import tqdm
 from transformers import AutoProcessor, SiglipVisionModel
 import umap.umap_ as umap
 from sklearn.cluster import KMeans
-from typing import Generator, Iterable, List, TypeVar
+from typing import Generator, Iterable, List, TypeVar, Union
 from ultralytics import YOLO
 from typing import List, Tuple, Optional
 
@@ -613,3 +613,27 @@ def draw_pitch_voronoi_diagram(
     overlay = cv2.addWeighted(voronoi, opacity, pitch, 1 - opacity, 0)
 
     return overlay
+
+
+def replace_outliers_based_on_distance(
+        positions: List[np.ndarray],
+        distance_threshold: float
+) -> List[np.ndarray]:
+    last_valid_position: Union[np.ndarray, None] = None
+    cleaned_positions: List[np.ndarray] = []
+
+    for position in positions:
+        if len(position) == 0:
+            cleaned_positions.append(position)
+        else:
+            if last_valid_position is None:
+                cleaned_positions.append(position)
+                last_valid_position = position
+            else:
+                distance = np.linalg.norm(position - last_valid_position)
+                if distance > distance_threshold:
+                    cleaned_positions.append(np.array([], dtype=np.float64))
+                else:
+                    cleaned_positions.append(position)
+                    last_valid_position = position
+    return cleaned_positions
