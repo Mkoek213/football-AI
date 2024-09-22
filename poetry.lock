@@ -219,6 +219,16 @@ files = [
 ]
 
 [[package]]
+name = "collection"
+version = "0.1.6"
+description = "Laravel-style collection class that provides an interface for pipeline programming"
+optional = false
+python-versions = "*"
+files = [
+    {file = "collection-0.1.6.tar.gz", hash = "sha256:c4f93726b9c6bed9bcf31286ab3e660401e856c896e58b56aad477b19aaa61f4"},
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -2979,4 +2989,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.12"
-content-hash = "d276cf1df4c6b56007af11036d8c3bac873b4832bb7c2c462d0e9cc99291a1cf"
+content-hash = "f1b8cab3fefa1231ce765996bfd02a0a4afdacf184284a1f375380c832df1e6a"

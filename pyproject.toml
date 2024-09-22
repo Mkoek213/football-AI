@@ -22,6 +22,7 @@ transformers = "^4.44.2"
 sentencepiece = "^0.2.0"
 scikit-learn = "^1.5.1"
 umap-learn = "^0.5.6"
+collection = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]
